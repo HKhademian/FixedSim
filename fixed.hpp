@@ -7,12 +7,15 @@
  * this Qmn fixed point simulator
  * value range is from -2^(m-1) inclusive to +2^(m-1) exclusive
  * quantize precision is 2^(-n)
- * it uses (long double) to calculate in floating-point space
- * and convert it to (long long int) which holds
+ *
+ * it use 128-bit signed value to hold all bits so (m+n<=128)
+ * all operations are implemented by real methods like shifting and addition
+ * previous hack (use long double underhook are wiped)
+ *
  * a v*(2^n) 2's complement version of result
  * ATTENTION: Due to typing limits and how c++ templates
- * works all of +|-|*|/ return Qmn from LHS
- * which is what exactly is a fixed-point Qmn precision
+ * works all of +|-|*|/ return Qmn from LHS (RHS auto cast to it)
+ * which is what exactly is a fixed-point Qmn precision system
  *
  * Developer: Hossain Khademian (@hkhademian)
  * LICENSE: use as long as you don't claim it's yours
