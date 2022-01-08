@@ -26,23 +26,25 @@ class Fixed {
 #define self (*this)
 
 public:
-    using INNER_T = signed long long int;
+    using INNER_U = unsigned __int128;
+    using INNER_I = signed __int128;
+    using INNER_F = long double;
 
-    static inline INNER_T mask(INNER_T inp) {
-        const INNER_T signbit = (unsigned long long int) 1 << (m + n - 1);
-        const INNER_T usable = ((unsigned long long int) 1 << (m + n)) - 1;
+    static inline INNER_I mask(INNER_I inp) {
+        const INNER_I signbit = (INNER_U) 1 << (m + n - 1);
+        const INNER_I usable = ((INNER_U) 1 << (m + n)) - 1;
         return (inp & usable) | (!(inp & signbit) ? 0 : ~usable);
     }
 
-    static inline std::bitset<n> mask_frac(INNER_T inp) {
+    static inline std::bitset<n> mask_frac(INNER_I inp) {
         return inp & ((1 << n) - 1);
     }
 
-    static inline std::bitset<m> mask_int(INNER_T inp) {
+    static inline std::bitset<m> mask_int(INNER_I inp) {
         return (inp >> n) & ((1 << m) - 1);
     }
 
-    static Fixed fromRaw(INNER_T raw) {
+    static Fixed fromRaw(INNER_I raw) {
         Fixed tmp;
         tmp.val = mask(raw);
         return tmp;
@@ -50,63 +52,73 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const Fixed<m, n> &f) {
         return os << "Fixed[" << m << "," << n << "]("
-                  << (long double) f << " ~ "
-                  // << std::bitset<8 * sizeof(INNER_T)>(f.val)
+                  << (INNER_F) f << " ~ "
+                  // << std::bitset<8 * sizeof(INNER_I)>(f.val)
                   << mask_int(f.val) << "." << mask_frac(f.val)
                   << ")";
     }
 
 private:
-    INNER_T val = 0;
+    INNER_I val = 0;
 
 public:
     Fixed() : val(0) {}
 
     Fixed(const Fixed &f) : val(mask(f.val)) {}
 
-    Fixed(long long int v) : val(mask(v << n)) {} // NOLINT(google-explicit-constructor)
-
-    Fixed(long double v) : val(mask(v * (1 << n))) {} // NOLINT(google-explicit-constructor)
-
-    Fixed(long int v) : Fixed((long long int) v) {} // NOLINT(google-explicit-constructor)
-
-    Fixed(int v) : Fixed((long long int) v) {} // NOLINT(google-explicit-constructor)
-
-    Fixed(short v) : Fixed((long long int) v) {} // NOLINT(google-explicit-constructor)
-
-    Fixed(char v) : Fixed((long long int) v) {} // NOLINT(google-explicit-constructor)
-
-    Fixed(double v) : Fixed((long double) v) {} // NOLINT(google-explicit-constructor)
-
-    Fixed(float v) : Fixed((long double) v) {} // NOLINT(google-explicit-constructor)
-
     /** cross precision conversion */
     template<int mm, int nn>
-    Fixed(const Fixed<mm, nn> &f) : Fixed((long double) f) {} // NOLINT(google-explicit-constructor)
+    Fixed(const Fixed<mm, nn> &f) // NOLINT(google-explicit-constructor)
+            : val(nn > n ? f.getRawBits() >> (nn - n) : f.getRawBits() << (n - nn)) {}
+
+    Fixed(INNER_I v) : val(mask(v << n)) {} // NOLINT(google-explicit-constructor)
+
+    Fixed(INNER_F v) : val(mask(v * (1 << n))) {} // NOLINT(google-explicit-constructor)
+
+    Fixed(long long int v) : Fixed((INNER_I) v) {} // NOLINT(google-explicit-constructor)
+
+    Fixed(long int v) : Fixed((INNER_I) v) {} // NOLINT(google-explicit-constructor)
+
+    Fixed(int v) : Fixed((INNER_I) v) {} // NOLINT(google-explicit-constructor)
+
+    Fixed(short v) : Fixed((INNER_I) v) {} // NOLINT(google-explicit-constructor)
+
+    Fixed(char v) : Fixed((INNER_I) v) {} // NOLINT(google-explicit-constructor)
+
+    Fixed(double v) : Fixed((INNER_F) v) {} // NOLINT(google-explicit-constructor)
+
+    Fixed(float v) : Fixed((INNER_F) v) {} // NOLINT(google-explicit-constructor)
 
     ~Fixed() = default;
 
-    explicit operator long double() const { return (((long long int) val) / ((long double) (1 << n))); }
+    explicit operator INNER_I() const { return self.val >> n; }
 
-    explicit operator double() const { return (long double) self; }
+    explicit operator long long int() const { return (INNER_I) self; }
 
-    explicit operator float() const { return (long double) self; }
+    explicit operator long int() const { return (INNER_I) self; }
 
-    explicit operator long long int() const { return (long double) self; }
+    explicit operator int() const { return (INNER_I) self; }
 
-    explicit operator long int() const { return (long double) self; }
+    explicit operator short() const { return (INNER_I) self; }
 
-    explicit operator int() const { return (long double) self; }
+    explicit operator char() const { return (INNER_I) self; }
 
-    explicit operator short() const { return (long double) self; }
+    explicit operator INNER_F() const {
+        // TODO: better impl
+        return val / (INNER_F) (1 << n);
+    }
 
-    explicit operator char() const { return (long double) self; }
+//    explicit operator long double() const { return (INNER_F) self; }
+
+    explicit operator double() const { return (INNER_F) self; }
+
+    explicit operator float() const { return (INNER_F) self; }
 
     explicit operator std::bitset<n + m>() const { return mask(val); }
 
-    long long int getRawBits() const { return val; }
+    INNER_I getRawBits() const { return val; }
 
-    void setRawBits(long long int const raw) { val = mask(raw); }
+    void setRawBits(INNER_I const raw) { val = mask(raw); }
 
     Fixed operator>>(int v) const { return Fixed::fromRaw(self.val >> v); }
 
@@ -116,9 +128,13 @@ public:
 
     Fixed operator-(const Fixed &f) const { return Fixed::fromRaw(self.val - f.val); }
 
-    Fixed operator*(const Fixed &f) const { return ((long double) self * (long double) f); }
+    Fixed operator*(const Fixed &f) const {
+        return Fixed::fromRaw(((INNER_I) self.val * (INNER_I) f.val) >> n);
+    }
 
-    Fixed operator/(const Fixed &f) const { return ((long double) self / (long double) f); }
+    Fixed operator/(const Fixed &f) const {
+        return Fixed::fromRaw(((INNER_I) self.val << n) / (INNER_I) f.val);
+    }
 
     Fixed &operator=(const Fixed &f) { return val = mask(f.val), self; }
 
