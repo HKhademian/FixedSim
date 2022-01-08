@@ -29,9 +29,9 @@ public:
     using INNER_T = signed long long int;
 
     static inline INNER_T mask(INNER_T inp) {
-        const INNER_T signbit = 1 << (m + n - 1);
-        const INNER_T usable = (1 << (m + n)) - 1;
-        return inp & usable | (!(inp & signbit) ? 0 : ~usable);
+        const INNER_T signbit = (unsigned long long int) 1 << (m + n - 1);
+        const INNER_T usable = ((unsigned long long int) 1 << (m + n)) - 1;
+        return (inp & usable) | (!(inp & signbit) ? 0 : ~usable);
     }
 
     static inline std::bitset<n> mask_frac(INNER_T inp) {
@@ -52,19 +52,19 @@ public:
         return os << "Fixed[" << m << "," << n << "]("
                   << (long double) f << " ~ "
                   // << std::bitset<8 * sizeof(INNER_T)>(f.val)
-                  << mask_int(f.val) << "," << mask_frac(f.val)
+                  << mask_int(f.val) << "." << mask_frac(f.val)
                   << ")";
     }
 
 private:
-    INNER_T val{};
+    INNER_T val = 0;
 
 public:
     Fixed() : val(0) {}
 
     Fixed(const Fixed &f) : val(mask(f.val)) {}
 
-    Fixed(long long int v) : val(mask(v * (1 << n))) {} // NOLINT(google-explicit-constructor)
+    Fixed(long long int v) : val(mask(v << n)) {} // NOLINT(google-explicit-constructor)
 
     Fixed(long double v) : val(mask(v * (1 << n))) {} // NOLINT(google-explicit-constructor)
 
