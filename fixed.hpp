@@ -44,6 +44,34 @@ public:
         return (inp >> n) & ((1 << m) - 1);
     }
 
+    static INNER_F i2f(INNER_I vi) {
+        // return vi / (INNER_F) (1 << n);
+
+        const INNER_U signbit = (INNER_U) 1 << (m + n - 1);
+        const auto sign = (vi & signbit) != 0;
+        const INNER_U vu = sign ? -vi : vi;
+
+        INNER_F res = vu >> n;
+        for (auto i = 0; i < n; ++i) {
+            const INNER_U mask = ((INNER_U) 1) << i;
+            if (vu & mask) {
+                res += powl(2, -n + i);
+            }
+        }
+        return sign ? -res : res;
+    }
+
+    static INNER_I f2i(INNER_F v) {
+        // return v * (1 << n);
+        const auto sign = v < 0;
+        auto vf = sign ? -v : v;
+        auto vu = (INNER_U) vf;
+        vf -= (INNER_F) vu;
+        vf = vf * powl(2, n);
+        vu = vu << n | (INNER_U) vf;
+        return sign ? -vu : vu;
+    }
+
     static Fixed fromRaw(INNER_I raw) {
         Fixed tmp;
         tmp.val = mask(raw);
@@ -73,7 +101,7 @@ public:
 
     Fixed(INNER_I v) : val(mask(v << n)) {} // NOLINT(google-explicit-constructor)
 
-    Fixed(INNER_F v) : val(mask(v * (1 << n))) {} // NOLINT(google-explicit-constructor)
+    Fixed(INNER_F v) : val(mask(f2i(v))) {} // NOLINT(google-explicit-constructor)
 
     Fixed(long long int v) : Fixed((INNER_I) v) {} // NOLINT(google-explicit-constructor)
 
@@ -103,10 +131,7 @@ public:
 
     explicit operator char() const { return (INNER_I) self; }
 
-    explicit operator INNER_F() const {
-        // TODO: better impl
-        return val / (INNER_F) (1 << n);
-    }
+    explicit operator INNER_F() const { return i2f(self.val); }
 
 //    explicit operator long double() const { return (INNER_F) self; }
 
