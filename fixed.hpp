@@ -112,9 +112,9 @@ public:
 
     Fixed operator<<(int v) const { return Fixed::fromRaw(self.val << v); }
 
-    Fixed operator+(const Fixed &f) const { return ((long double) self + (long double) f); }
+    Fixed operator+(const Fixed &f) const { return Fixed::fromRaw(self.val + f.val); }
 
-    Fixed operator-(const Fixed &f) const { return ((long double) self - (long double) f); }
+    Fixed operator-(const Fixed &f) const { return Fixed::fromRaw(self.val - f.val); }
 
     Fixed operator*(const Fixed &f) const { return ((long double) self * (long double) f); }
 
