@@ -77,5 +77,18 @@ int main() {
     std::cout << Fixed<16, 7>(1374.79) << std::endl;
     std::cout << Fixed<16, 8>(1374.79) << std::endl;
     std::cout << Fixed<16, 9>(1374.79) << std::endl;
+
+    std::cout << std::endl;
+    std::cout << Fixed<16, 30>(74.79) << std::endl;
+    std::cout << (Fixed<16, 30>(74.79) >> 1) << std::endl;
+    std::cout << (Fixed<16, 30>(74.79) >> 2) << std::endl;
+    std::cout << (Fixed<16, 30>(74.79) >> 3) << std::endl;
+
+    std::cout << std::endl;
+    std::cout << Fixed<16, 30>(74.79) << std::endl;
+    std::cout << (Fixed<16, 30>(74.79) << 1) << std::endl;
+    std::cout << (Fixed<16, 30>(74.79) << 2) << std::endl;
+    std::cout << (Fixed<16, 30>(74.79) << 3) << std::endl;
+
     return 0;
 }

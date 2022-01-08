@@ -108,6 +108,10 @@ public:
 
     void setRawBits(long long int const raw) { val = mask(raw); }
 
+    Fixed operator>>(int v) const { return Fixed::fromRaw(self.val >> v); }
+
+    Fixed operator<<(int v) const { return Fixed::fromRaw(self.val << v); }
+
     Fixed operator+(const Fixed &f) const { return ((long double) self + (long double) f); }
 
     Fixed operator-(const Fixed &f) const { return ((long double) self - (long double) f); }
