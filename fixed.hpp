@@ -156,6 +156,8 @@ public:
 
     Fixed operator-(const Fixed &f) const { return Fixed::fromRaw(self.val - f.val); }
 
+    Fixed operator-() const { return Fixed::fromRaw(-self.val); }
+
     Fixed operator*(const Fixed &f) const {
         return Fixed::fromRaw(((INNER_I) self.val * (INNER_I) f.val) >> n);
     }
